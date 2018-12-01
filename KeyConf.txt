@@ -1,0 +1,11 @@
+//ClearPlayerClasses
+
+//AddPlayerClass DoomPlayer
+AddPlayerClass GhostMonster
+
+
+
+
+
+
+

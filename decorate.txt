@@ -1,0 +1,5 @@
+#include "decorate/GhostMonster.txt"
+#include "decorate/ImpPlayer.txt"
+#include "decorate/FriendlyFire.txt"
+#include "decorate/BaronPlayer.txt"
+#include "decorate/CacodemonPlayer.txt"

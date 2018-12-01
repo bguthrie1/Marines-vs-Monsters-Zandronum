@@ -1,0 +1,166 @@
+Actor BaronBall2 : MonsterWeapon
+{
+//  +WEAPON.NOAUTOFIRE
+//  +WEAPON.CHEATNOTWEAPON
+  obituary "%o was ripped open by %k."
+  States
+  {
+  Ready:
+    PUNG A 1 A_WeaponReady
+    loop
+  Deselect:
+    PUNG A 1 A_Lower
+    loop
+  Select:
+    PUNG A 0 A_Raise // Additional A_Raises are needed for a quicker recovery from a pain state (matches that of normal monsters).
+    PUNG A 0 A_Raise
+    PUNG A 0 A_Raise
+    PUNG A 0 A_Raise
+    PUNG A 1 A_Raise
+    loop
+  Fire:
+    PUNG B 8
+    PUNG C 8 A_JumpIfCloser(75,"MeleeAttack")
+    PUNG D 8 A_FireCustomMissile("BaronBall")
+    PUNG C 3
+    PUNG B 15 A_ReFire
+    goto Ready
+  MeleeAttack:
+    PUNG C 8
+    PUNG D 0 A_PlaySound("baron/melee")
+    PUNG D 8 A_CustomPunch(10)
+    PUNG C 4
+    PUNG B 15 A_ReFire
+    goto Ready
+
+  }
+}
+
+Actor BaronPlayer : GhostMonster
+{
+  Player.MorphWeapon "BaronBall2" // So that the player monster can shoot stuff
+  Player.Viewheight 65
+  Obituary "%o was bruised by %k."
+  Health 1000
+  Radius 24
+  Height 64
+  Mass 1000
+  Speed 0.2 //8/4
+  Painchance 50
+  Player.DamageScreenColor green
+  BloodColor Green
+  DamageFactor "BaronFire", 0
+  Player.SoundClass "baron2" // Custom sound classes used primarly for *usefail and *grunt.
+  +FLOORCLIP
+
+  // Remove flags and properties inherited by the random ghost monster
+  +SHOOTABLE
+  +SOLID
+  -THRUACTORS
+  -NOTRIGGER
+  -NOTARGET
+  RenderStyle "Normal"
+  Alpha 1.0
+
+
+  states
+  {
+  Spawn:
+    BOSS AB 10
+    BOSS A 0 A_JumpIfTargetInLOS(1, 90, JLOSF_DEADNOJUMP, 0, 0)
+    Goto Spawn
+    BOSS A 0 A_CheckFlag("FRIENDLY", 1, AAPTR_PLAYER_GETTARGET) // Actors with the friendly flag in this case are actual enemies.
+    Goto Spawn
+    BOSS A 0 A_Jump (30, "PlaySightRoar") // If the player is looking at an enemy, roar at the enemy, but not all the time.
+    loop
+  See:
+    BOSS AABBCCDD 3
+    BOSS D 0 A_Jump (20, "PlayActiveRoar")
+    BOSS A 0 A_JumpIfTargetInLOS(1, 90, JLOSF_DEADNOJUMP, 0, 0)
+    Goto See
+    BOSS A 0 A_CheckFlag("FRIENDLY", 1, AAPTR_PLAYER_GETTARGET) // Jump if the target is has the friendly flag (an actual enemy in this case).
+    Goto See
+    BOSS A 0 A_Jump (30, "PlaySightRoar") // If the player is chasing an enemy, roar at the enemy, but not all the time.
+    loop
+
+  Missile:
+    BOSS EF 8
+    BOSS G 8
+    goto Spawn
+
+  Pain:
+    BOSS A 0 A_TakeInventory ("BaronBall2", 1) // Take away weapon to stop the monster from firing while stunned
+    BOSS H 2
+    BOSS H 2 A_PlaySound("baron/pain")
+    BOSS A 0 A_GiveInventory ("BaronBall2", 1)
+    BOSS A 0 A_SelectWeapon ("BaronBall2")
+    goto See
+
+  Death:
+    BOSS A 0 A_TakeInventory("BaronBall2")
+	BOSS A 0 A_GiveInventory("SetMonsterClass")
+    BOSS I 8 
+    BOSS J 8 A_PlaySound("baron/death")
+    BOSS K 8
+    BOSS L 8 A_NoBlocking
+    BOSS MN 8
+    BOSS O -1
+    stop
+
+  XDeath:
+    Goto Death
+
+ Raise:
+    BOSS ONMLKJI 8
+    goto See
+
+  PlayActiveRoar:
+    BOSS A 0 A_PlaySound("baron/active")
+    Goto See
+
+  PlaySightRoar:
+    BOSS A 0 A_PlaySound("baron/sight") // Rawr.
+    Goto Spawn
+
+  }
+}
+
+
+
+
+
+
+actor BaronCanGhostItem : PowerupGiver
+{
+	powerup.duration 999999999
+	Powerup.Type BaronCanGhostMorph
+  +INVENTORY.AUTOACTIVATE
+  +INVENTORY.ALWAYSPICKUP
+}
+
+actor BaronGhostItem : PowerupGiver
+{
+	powerup.duration 999999999
+	Powerup.Type BaronGhostMorph
+  +INVENTORY.AUTOACTIVATE
+  +INVENTORY.ALWAYSPICKUP
+}
+
+
+
+actor PowerBaronCanGhostMorph : PowerMorph
+{
+	PowerMorph.PlayerClass "BaronPlayer"
+	PowerMorph.MorphStyle (MRF_UNDOBYTOMEOFPOWER)
+	PowerMorph.MorphFlash "none"
+	PowerMorph.UnMorphFlash "none"
+}
+
+actor PowerBaronGhostMorph : PowerMorph
+{
+	PowerMorph.PlayerClass "BaronGhost"
+	PowerMorph.MorphStyle (MRF_UNDOBYTOMEOFPOWER)
+	PowerMorph.MorphFlash "none"
+	PowerMorph.UnMorphFlash "none"
+}
+
